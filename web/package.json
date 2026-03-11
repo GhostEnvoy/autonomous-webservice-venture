@@ -1,0 +1,17 @@
+{
+  "name": "problem-signal-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Landing + waitlist + pain-signal capture service for demand validation.",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
