@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Curiosity Engine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #e8e8e8;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    h1 {
+      font-size: clamp(2rem, 6vw, 3rem);
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #00d9ff, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+    .explore-btn {
+      background: linear-gradient(90deg, #00d9ff, #a855f7);
+      border: none;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a1a2e;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .explore-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 217, 255, 0.3);
+    }
+    .hidden { display: none !important; }
+    
+    .exploration-area {
+      margin-top: 3rem;
+      padding: 2rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .exploration-area h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #00d9ff;
+    }
+    .click-zone {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .zone {
+      aspect-ratio: 1;
+      background: rgba(168, 85, 247, 0.2);
+      border: 2px solid rgba(168, 85, 247, 0.4);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .zone:hover { background: rgba(168, 85, 247, 0.4); transform: scale(1.05); }
+    .zone.found { background: rgba(0, 217, 255, 0.4); border-color: #00d9ff; }
+    
+    .outcome-card {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      max-width: 360px;
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .outcome-card h3 {
+      font-size: 1.1rem;
+      color: #00d9ff;
+      margin-bottom: 0.75rem;
+    }
+    .outcome-card p {
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .outcome-card .outcome-text {
+      background: rgba(168, 85, 247, 0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-style: italic;
+      color: #e2e8f0;
+    }
+    .outcome-card .btn-row {
+      display: flex;
+      gap: 0.75rem;
+    }
+    .outcome-card button {
+      flex: 1;
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .share-btn {
+      background: linear-gradient(90deg, #00d9ff, #a855f7);
+      border: none;
+      color: #1a1a2e;
+    }
+    .share-btn:hover { transform: scale(1.02); }
+    .dismiss-btn {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #94a3b8;
+    }
+    .dismiss-btn:hover { border-color: #64748b; color: #cbd5e1; }
+    
+    .dismiss-outcome {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 1.25rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .dismiss-outcome:hover { color: #94a3b8; }
+
+    @media (max-width: 480px) {
+      .outcome-card {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Curiosity Engine</h1>
+    <p class="subtitle">Something hidden waits to be discovered. Your patterns reveal more than you know.</p>
+    <button class="explore-btn" id="startBtn">Begin Exploration</button>
+    
+    <div class="exploration-area hidden" id="exploreArea">
+      <h2>Explore the Grid</h2>
+      <p style="color:#94a3b8;margin-bottom:1rem;">Click to uncover secrets hidden in the pattern...</p>
+      <div class="click-zone" id="clickZone"></div>
+      <p style="margin-top:1.5rem;color:#64748b;font-size:0.85rem;">
+        Secrets found: <span id="foundCount">0</span> / <span id="totalCount">0</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="outcome-card hidden" id="outcomeCard">
+    <button class="dismiss-outcome" id="dismissBtn">&times;</button>
+    <h3>Your Outcome Revealed</h3>
+    <p>Your exploration pattern tells a story:</p>
+    <div class="outcome-text" id="outcomeText"></div>
+    <div class="btn-row">
+      <button class="share-btn" id="shareBtn">Share Your Outcome</button>
+      <button class="dismiss-btn" id="closeBtn">Keep It</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const OUTCOMES = [
+        "The Pattern Seeker — You move with purpose, finding order in chaos.",
+        "The Curious Mind — Every click reveals a deeper question.",
+        "The Hidden Explorer — You sense what others miss in the margins.",
+        "The Systematic Discoverer — Methodical, thorough, always finding more."
+      ];
+      
+      let state = {
+        started: false,
+        interactionCount: 0,
+        foundSecrets: new Set(),
+        engagedStartTime: null,
+        outcomeShown: false,
+        maxScrollDepth: 0,
+        consentGranted: true
+      };
+      
+      const startBtn = document.getElementById('startBtn');
+      const exploreArea = document.getElementById('exploreArea');
+      const clickZone = document.getElementById('clickZone');
+      const foundCount = document.getElementById('foundCount');
+      const totalCount = document.getElementById('totalCount');
+      const outcomeCard = document.getElementById('outcomeCard');
+      const outcomeText = document.getElementById('outcomeText');
+      const shareBtn = document.getElementById('shareBtn');
+      const dismissBtn = document.getElementById('dismissBtn');
+      const closeBtn = document.getElementById('closeBtn');
+
+      const ZONE_COUNT = 12;
+      const SECRET_INDICES = [2, 5, 9];
+      
+      totalCount.textContent = SECRET_INDICES.length;
+      
+      for (let i = 0; i < ZONE_COUNT; i++) {
+        const z = document.createElement('div');
+        z.className = 'zone';
+        z.textContent = ['?', '◈', '◇', '△', '○', '□'][i % 6];
+        z.dataset.index = i;
+        if (SECRET_INDICES.includes(i)) {
+          z.dataset.secret = 'true';
+          z.textContent = ['✧', '✦', '❋'][SECRET_INDICES.indexOf(i)];
+        }
+        z.addEventListener('click', handleZoneClick);
+        clickZone.appendChild(z);
+      }
+
+      function handleZoneClick(e) {
+        const zone = e.target;
+        const idx = parseInt(zone.dataset.index);
+        
+        if (SECRET_INDICES.includes(idx) && !state.foundSecrets.has(idx)) {
+          state.foundSecrets.add(idx);
+          zone.classList.add('found');
+          foundCount.textContent = state.foundSecrets.size;
+        } else if (!SECRET_INDICES.includes(idx)) {
+          zone.style.opacity = '0.5';
+        }
+        
+        state.interactionCount++;
+        trackEvent('interaction', { type: 'zone_click', index: idx, total: state.interactionCount });
+        
+        checkOutcomeTrigger();
+      }
+
+      startBtn.addEventListener('click', () => {
+        state.started = true;
+        state.engagedStartTime = Date.now();
+        startBtn.classList.add('hidden');
+        exploreArea.classList.remove('hidden');
+        trackEvent('exploration_started');
+      });
+
+      function checkOutcomeTrigger() {
+        if (state.outcomeShown || !state.consentGranted) return;
+        
+        const engagedTime = state.engagedStartTime ? (Date.now() - state.engagedStartTime) / 1000 : 0;
+        const hasMeaningfulInteraction = state.foundSecrets.size >= 1 || state.interactionCount >= 2;
+        const hasHighScrollDepth = state.maxScrollDepth > 70;
+        
+        if (engagedTime >= 30 && (hasMeaningfulInteraction || hasHighScrollDepth)) {
+          showOutcome();
+        }
+      }
+
+      function showOutcome() {
+        state.outcomeShown = true;
+        
+        const seed = (state.foundSecrets.size * 7 + state.interactionCount * 3) % OUTCOMES.length;
+        outcomeText.textContent = OUTCOMES[seed];
+        
+        outcomeCard.classList.remove('hidden');
+        trackEvent('outcome_card_shown', { seed, engagedTime: (Date.now() - state.engagedStartTime) / 1000 });
+        
+        setTimeout(checkOutcomeTrigger, 1000);
+      }
+
+      function dismissOutcome() {
+        outcomeCard.classList.add('hidden');
+        trackEvent('outcome_card_dismissed');
+      }
+
+      function shareOutcome() {
+        const seed = (state.foundSecrets.size * 7 + state.interactionCount * 3) % OUTCOMES.length;
+        const url = new URL(window.location.href);
+        url.searchParams.set('outcome', seed);
+        url.searchParams.set('secrets', state.foundSecrets.size);
+        
+        navigator.clipboard.writeText(url.toString()).then(() => {
+          shareBtn.textContent = 'Link Copied!';
+          trackEvent('outcome_card_shared', { seed, url: url.toString() });
+          setTimeout(() => { shareBtn.textContent = 'Share Your Outcome'; }, 2000);
+        }).catch(() => {
+          trackEvent('outcome_card_share_failed', { seed });
+        });
+      }
+
+      dismissBtn.addEventListener('click', dismissOutcome);
+      closeBtn.addEventListener('click', dismissOutcome);
+      shareBtn.addEventListener('click', shareOutcome);
+
+      let scrollTimeout;
+      window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+          const depth = Math.round((window.scrollY / scrollHeight) * 100);
+          if (depth > state.maxScrollDepth) {
+            state.maxScrollDepth = depth;
+            trackEvent('scroll_depth', { depth });
+            checkOutcomeTrigger();
+          }
+        }, 100);
+      });
+
+      setInterval(() => {
+        if (state.engagedStartTime && !state.outcomeShown) {
+          const elapsed = (Date.now() - state.engagedStartTime) / 1000;
+          if (elapsed >= 15 && elapsed < 20) trackEvent('milestone_15s', { depth: state.maxScrollDepth });
+          else if (elapsed >= 30 && elapsed < 35) trackEvent('milestone_30s', { depth: state.maxScrollDepth });
+          else if (elapsed >= 60 && elapsed < 65) trackEvent('milestone_60s', { depth: state.maxScrollDepth });
+          else if (elapsed >= 120 && elapsed < 125) trackEvent('milestone_120s', { depth: state.maxScrollDepth });
+        }
+      }, 5000);
+
+      function trackEvent(name, data = {}) {
+        if (!state.consentGranted) return;
+        
+        const event = {
+          t: name,
+          ts: Date.now(),
+          url: window.location.pathname,
+          ...data
+        };
+        
+        try {
+          const existing = JSON.parse(localStorage.getItem('_events') || '[]');
+          existing.push(event);
+          if (existing.length > 100) existing.shift();
+          localStorage.setItem('_events', JSON.stringify(existing));
+        } catch (e) {}
+        
+        if (window.Claw) {
+          window.Claw.track(name, data);
+        }
+        
+        console.log('[track]', name, data);
+      }
+
+      trackEvent('page_view', { referrer: document.referrer });
+    })();
+  </script>
+</body>
+</html>
