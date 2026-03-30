@@ -161,6 +161,18 @@
     }
     .dismiss-outcome:hover { color: #94a3b8; }
 
+    .return-badge {
+      display: inline-block;
+      background: rgba(0, 217, 255, 0.15);
+      border: 1px solid rgba(0, 217, 255, 0.3);
+      color: #00d9ff;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+
     @media (max-width: 480px) {
       .outcome-card {
         left: 1rem;
@@ -214,8 +226,49 @@
         engagedStartTime: null,
         outcomeShown: false,
         maxScrollDepth: 0,
-        consentGranted: true
+        consentGranted: true,
+        visitorId: null
       };
+
+      function getVisitorId() {
+        let id = localStorage.getItem('_visitor_id');
+        if (!id) {
+          id = 'v_' + Math.random().toString(36).substr(2, 9);
+          localStorage.setItem('_visitor_id', id);
+        }
+        return id;
+      }
+
+      function saveProgress() {
+        state.visitorId = getVisitorId();
+        const progress = {
+          secrets: Array.from(state.foundSecrets),
+          timestamp: Date.now()
+        };
+        localStorage.setItem('_progress_' + state.visitorId, JSON.stringify(progress));
+      }
+
+      function loadProgress() {
+        state.visitorId = getVisitorId();
+        const saved = localStorage.getItem('_progress_' + state.visitorId);
+        if (saved) {
+          try {
+            const progress = JSON.parse(saved);
+            progress.secrets.forEach(s => state.foundSecrets.add(s));
+            return progress;
+          } catch (e) { return null; }
+        }
+        return null;
+      }
+
+      function getWelcomeBackMessage(savedSecrets) {
+        const messages = [
+          `Welcome back! You have ${savedSecrets.length} secret${savedSecrets.length !== 1 ? 's' : ''} already discovered.`,
+          `Your journey continues. ${savedSecrets.length} secret${savedSecrets.length !== 1 ? 's' : ''} await your return.`,
+          `The pattern remembers you. ${savedSecrets.length} secret${savedSecrets.length !== 1 ? 's' : ''} found so far.`
+        ];
+        return messages[savedSecrets.length % messages.length];
+      }
       
       const startBtn = document.getElementById('startBtn');
       const exploreArea = document.getElementById('exploreArea');
@@ -254,6 +307,8 @@
           state.foundSecrets.add(idx);
           zone.classList.add('found');
           foundCount.textContent = state.foundSecrets.size;
+          saveProgress();
+          trackEvent('secret_found', { index: idx, total: state.foundSecrets.size, visitorId: state.visitorId });
         } else if (!SECRET_INDICES.includes(idx)) {
           zone.style.opacity = '0.5';
         }
@@ -264,12 +319,31 @@
         checkOutcomeTrigger();
       }
 
+      function init() {
+        const progress = loadProgress();
+        if (progress && progress.secrets.length > 0) {
+          const welcome = document.createElement('p');
+          welcome.id = 'welcomeMsg';
+          welcome.style.cssText = 'color:#00d9ff;margin-bottom:1rem;font-size:1rem;';
+          welcome.textContent = getWelcomeBackMessage(progress.secrets);
+          exploreArea.insertBefore(welcome, exploreArea.querySelector('p'));
+          foundCount.textContent = state.foundSecrets.size;
+          
+          document.querySelectorAll('.zone').forEach((z, i) => {
+            if (state.foundSecrets.has(parseInt(z.dataset.index))) {
+              z.classList.add('found');
+            }
+          });
+        }
+      }
+
       startBtn.addEventListener('click', () => {
         state.started = true;
         state.engagedStartTime = Date.now();
         startBtn.classList.add('hidden');
         exploreArea.classList.remove('hidden');
         trackEvent('exploration_started');
+        init();
       });
 
       function checkOutcomeTrigger() {
@@ -367,6 +441,18 @@
         
         console.log('[track]', name, data);
       }
+
+      (function() {
+        const progress = loadProgress();
+        if (progress && progress.secrets.length > 0) {
+          trackEvent('return_visit', { previousSecrets: progress.secrets.length, visitorId: getVisitorId() });
+          const h1 = document.querySelector('h1');
+          const badge = document.createElement('span');
+          badge.className = 'return-badge';
+          badge.textContent = '↺ Progress Saved';
+          h1.appendChild(badge);
+        }
+      })();
 
       trackEvent('page_view', { referrer: document.referrer });
     })();
