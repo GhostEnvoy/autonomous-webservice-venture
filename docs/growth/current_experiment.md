@@ -1,35 +1,46 @@
 # Current Experiment
 
 ## Experiment ID
-EXP-001
+EXP-002
 
 ## Bucket
-interaction loop
+distribution / earned share
 
 ## Status
 ready_for_test
 
 ## Hypothesis
-If the first public page feels alive, remembers the visitor, and reveals a shareable outcome only after a short interaction loop, the first user will spend more meaningful time on the page and become more willing to share it with someone else.
+If the page reveals a unique, personalized outcome only after meaningful interaction (30-60s of engaged time), the first visitor will feel compelled to share this outcome with at least one other person, creating organic quality-driven growth without paid acquisition or spam tactics.
 
 ## Target Audience Moment
-The first 10-90 seconds of the CEO's first live session, including the moment where sharing feels earned rather than requested.
+The moment after the first visitor completes the interaction loop and receives their personalized outcome - this becomes the natural share-impulse moment.
 
 ## Expected Engaged-Time Lift
-+45 to +90 seconds versus the current rolling baseline.
++30 to +60 seconds additional engaged time from the share interaction itself (building the outcome takes time, sharing adds more).
+
+## Distribution Mechanism
+- No paid ads or influencer outreach
+- No generic "share now" prompts
+- Share happens through a unique, personalized artifact that the visitor created through their interaction
+- The artifact is only revealed after meaningful engagement, not before
 
 ## Junk-Attention Risk
-Do not inflate time on page through confusion, forced waiting, empty animation, or guilt-based sharing prompts.
+- Do NOT count the outcome-building phase as "engaged time" separately from actual interaction
+- Do NOT make the share prompt feel obligatory or guilt-based
+- Do NOT create artificial scarcity or fake urgency
+- The outcome must have genuine novelty/delight value
 
 ## Rollback Trigger
-Rollback if engaged time stays flat, if the page feels manipulative, or if the share prompt appears before the experience has earned it.
+Rollback if:
+- Share rate stays below 10% after 5+ real visits
+- Engaged time decreases rather than increases
+- Users report the share prompt feels manipulative
+- The outcome feels generic or unremarkable
 
-## Share Goal
-The first version should make it natural for the CEO to think "I should send this to one other person" after interacting with the page.
+## Success Metric
+At least 1 out of 5 first-session visitors shares the outcome with another person within 7 days.
 
 ## Notes
-- The public Pages-safe surface is live on staging and production.
-- Engaged-time, interaction, return-visit, and share-intent instrumentation are present.
-- The next step is a supervised first real session, not another infrastructure rewrite.
-- Only one active experiment should live in this file at a time.
-- If a backup idea is needed, place it in experiment_backlog.md instead.
+- EXP-001 (interaction loop) remains the foundation - this experiment builds on top of it
+- The "unique outcome" should be generated from the visitor's interaction patterns, not a generic message
+- Only one active experiment at a time; previous experiments move to experiment_backlog.md
